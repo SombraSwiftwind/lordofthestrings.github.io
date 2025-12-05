@@ -165,6 +165,23 @@ html, body {
     cursor: pointer;
     border-radius: 6px;
 }
+/* Frustrating taskbar search (to the right of Start) */
+.taskbar .taskbar-search {
+    margin-left: 8px;
+    height: 32px;
+    min-width: 220px;
+    max-width: 320px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 0;
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.taskbar .taskbar-search::placeholder { color: rgba(255,255,255,0.6); }
+.taskbar .taskbar-search:focus { box-shadow: 0 6px 18px rgba(0,0,0,0.45); background: rgba(255,255,255,0.08); }
 .taskbar .start-btn:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
@@ -525,3 +542,126 @@ html, body {
     height: auto;
 }
 .loading-screen--hide { opacity: 0; transition: opacity .32s ease; pointer-events: none; }
+
+/* Final shutdown sequence styling */
+.final-shutdown-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(4,74,142);
+    z-index: 999999;
+    flex-direction: column;
+}
+.final-shutdown-gif {
+    max-width: 90%;
+    max-height: 90%;
+    display: block;
+}
+.final-shutdown-overlay.final-shutdown-black {
+    background: #000000;
+}
+.final-shutdown-link {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 12px 20px;
+    background: #ffffff;
+    color: #000000;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+.final-shutdown-link.visible { opacity: 1; }
+
+/* Notification popups (Win10 desktop) */
+.notification-area {
+    position: fixed;
+    right: 20px;
+    bottom: 80px; /* above taskbar */
+    display: flex;
+    flex-direction: column-reverse; /* new notifications appear above previous */
+    gap: 10px;
+    align-items: flex-end;
+    z-index: 1200000;
+    pointer-events: none; /* allow clicks to pass through except on notifications */
+}
+.notification {
+    pointer-events: auto;
+    background: rgba(40,40,40,0.98);
+    color: #fff;
+    padding: 12px 14px;
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 260px;
+    max-width: 360px;
+    /* make notification taller (approx. 2x previous height) */
+    min-height: 96px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform: translateX(20px);
+    opacity: 0;
+    animation: notif-in .28s ease forwards;
+}
+.notification .notif-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+}
+.notification .notif-close:hover { background: rgba(255,255,255,0.06); }
+.notification .notif-icon {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.06);
+}
+.notification .notif-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.notification .notif-title { font-weight: 700; font-size: 14px; }
+.notification .notif-body { font-size: 13px; opacity: 0.95; }
+
+@keyframes notif-in {
+    from { transform: translateX(20px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+/* exit animation */
+.notification.removing { animation: notif-out .24s ease forwards; }
+@keyframes notif-out {
+    from { transform: translateX(0); opacity: 1; }
+    to   { transform: translateX(20px); opacity: 0; }
+}
+
+/* Snake canvas styling: blue border to indicate play area */
+.snake-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    box-sizing: border-box;
+    border: none; /* removed blue border per request */
+    border-radius: 4px;
+}

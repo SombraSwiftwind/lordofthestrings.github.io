@@ -15,7 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // remove after 5 seconds with a small fade
       setTimeout(() => {
         ls.classList.add('loading-screen--hide');
-        setTimeout(() => { ls.remove(); }, 360);
+        setTimeout(() => {
+          ls.remove();
+          try {
+            // signal other code that the desktop finished loading
+            document.dispatchEvent(new Event('desktop:loaded'));
+            // set a flag so late listeners can detect it
+            window.__desktopLoaded = true;
+          } catch (err) {
+            console.warn('desktop loaded event dispatch failed', err);
+          }
+        }, 360);
       }, 5000);
     } catch (err) {
       console.warn('loading screen failed', err);
@@ -57,6 +67,211 @@ document.addEventListener('DOMContentLoaded', () => {
 
   computeCellSize();
   window.addEventListener('resize', computeCellSize);
+
+  // Open a search window showing Bing results for a query.
+  function openSearchWindow(query) {
+    if (!query) return;
+    const title = `Bing: ${query}`;
+    const win = document.createElement('div');
+    win.className = 'window';
+    win.style.width = '1000px';
+    win.style.height = '600px';
+    win.style.maxWidth = 'none';
+    const winId = 'win-search-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
+    win.dataset.winId = winId;
+    win.innerHTML = `
+      <div class="titlebar">
+        <div class="title">${title}</div>
+        <div class="controls">
+          <div class="win-btn minimize" title="Minimize">—</div>
+          <div class="win-btn maximize" title="Maximize">▢</div>
+          <div class="win-btn close" title="Close">✕</div>
+        </div>
+      </div>
+      <div class="content" style="padding:0; height: calc(100% - 40px);">
+        <iframe class="search-iframe" src="https://www.bing.com/search?q=${encodeURIComponent(query)}" style="border:0; width:100%; height:100%;"></iframe>
+      </div>
+    `;
+    // append and focus
+    desktop.appendChild(win);
+    win.tabIndex = -1; win.focus();
+    window.__winZ = window.__winZ || 20000; win.style.zIndex = ++window.__winZ;
+    win.addEventListener('pointerdown', () => { win.style.zIndex = ++window.__winZ; }, { passive: true });
+
+    const taskbar = document.querySelector('.taskbar');
+    const taskbarRight = taskbar ? taskbar.querySelector('.tb-right') : null;
+
+    // CLOSE
+    const btnClose = win.querySelector('.win-btn.close');
+    btnClose.addEventListener('pointerdown', (ev) => {
+      ev.stopPropagation(); ev.preventDefault();
+      // remove taskbar item if any
+      const containerForTb = taskbarRight || taskbar;
+      const existing = containerForTb ? Array.from(containerForTb.children).find(c => c.dataset && c.dataset.winId === winId) : null;
+      if (existing) existing.remove();
+      win.remove();
+    });
+
+    // MINIMIZE
+    const btnMin = win.querySelector('.win-btn.minimize');
+    btnMin.addEventListener('pointerdown', (ev) => {
+      ev.stopPropagation(); ev.preventDefault();
+      const containerForTb = taskbarRight || taskbar;
+      const existingTb = containerForTb ? Array.from(containerForTb.children).find(c => c.dataset && c.dataset.winId === winId) : null;
+      if (existingTb) { win.style.display = 'none'; win.hidden = true; return; }
+      const tb = document.createElement('div'); tb.className = 'tb-item'; tb.dataset.winId = winId; tb.textContent = title;
+      tb.addEventListener('pointerdown', (tev) => { tev.stopPropagation(); tev.preventDefault(); win.style.display = ''; win.hidden = false; win.style.zIndex = ++window.__winZ; tb.remove(); });
+      (taskbarRight || taskbar).appendChild(tb);
+      win.style.display = 'none'; win.hidden = true;
+    });
+
+    // MAXIMIZE / RESTORE
+    const btnMax = win.querySelector('.win-btn.maximize');
+    btnMax.addEventListener('pointerdown', (ev) => {
+      ev.stopPropagation(); ev.preventDefault();
+      const isMax = win.classList.contains('maximized');
+      const taskbarEl = document.querySelector('.taskbar');
+      const taskbarHeight = taskbarEl ? taskbarEl.getBoundingClientRect().height : 0;
+      if (!isMax) {
+        win.dataset._prev = JSON.stringify({ left: win.style.left || '', top: win.style.top || '', width: win.style.width || '', height: win.style.height || '', transform: win.style.transform || '' });
+        win.classList.add('maximized'); win.style.left = '0'; win.style.top = '0'; win.style.transform = 'none'; win.style.width = '100vw'; win.style.height = `calc(100vh - ${taskbarHeight}px)`;
+      } else {
+        const prev = win.dataset._prev ? JSON.parse(win.dataset._prev) : {}; win.classList.remove('maximized'); win.style.left = prev.left || ''; win.style.top = prev.top || ''; win.style.width = prev.width || '300px'; win.style.height = prev.height || '600px'; win.style.transform = prev.transform || 'translate(-50%, -50%)'; delete win.dataset._prev;
+      }
+    });
+  }
+
+  // Frustrating search: reverse input text as the user types
+  (function frustratingSearch() {
+    try {
+      const search = document.querySelector('.taskbar-search');
+      if (!search) return;
+      let composing = false;
+      // For IME support: do not transform during composition
+      search.addEventListener('compositionstart', () => { composing = true; });
+      search.addEventListener('compositionend', () => { composing = false; /* apply final reverse */ search.value = String(search.value).split('').reverse().join(''); });
+
+      search.addEventListener('input', (e) => {
+        if (composing) return;
+        // reverse entire value to make the input 'frustrating'
+        const v = String(search.value || '');
+        const rev = v.split('').reverse().join('');
+        // set only if different to avoid extra events
+        if (rev !== v) search.value = rev;
+      });
+
+      // optional: keep caret at end (we force end position)
+      search.addEventListener('keydown', () => { setTimeout(() => { try { search.selectionStart = search.selectionEnd = search.value.length; } catch (err) {} }, 0); });
+      // on Enter, open search window and a browser tab with Bing results
+      search.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' && !composing) {
+          const q = String(search.value || '').trim();
+          if (q.length > 0) {
+            ev.preventDefault();
+            try { openSearchWindow(q); } catch (err) { console.warn('openSearchWindow failed', err); }
+          }
+        }
+      });
+    } catch (err) {
+      console.warn('Frustrating search init failed', err);
+    }
+  })();
+
+  // Notifications system (only active on Win10 desktop pages)
+  (function initNotifications() {
+    try {
+      // run only when body has win10-bg class
+      if (!document.body.classList.contains('win10-bg')) return;
+
+      const area = document.createElement('div');
+      area.className = 'notification-area';
+      document.body.appendChild(area);
+
+      let notifCount = 0;
+      const MAX_NOTIFS = 8;
+
+      function startNotifications() {
+        // create the first one immediately
+        const first = sampleMsgs[0]; createNotification(first[0], first[1], 'images/win10_assets/Windows_logo_w.svg');
+        // spawn a notification every 10s
+        setInterval(() => {
+          const idx = Math.floor(Math.random() * sampleMsgs.length);
+          const s = sampleMsgs[idx];
+          // optionally use Windows logo as icon
+          createNotification(s[0], s[1], 'images/win10_assets/Windows_logo_w.svg');
+        }, 10000);
+      }
+
+      function createNotification(title, body, iconSrc) {
+        const n = document.createElement('div');
+        n.className = 'notification';
+
+        const ic = document.createElement('div');
+        ic.className = 'notif-icon';
+        if (iconSrc) {
+          const im = document.createElement('img');
+          im.src = iconSrc;
+          im.alt = '';
+          im.style.width = '28px';
+          im.style.height = '28px';
+          ic.appendChild(im);
+        }
+
+        const txt = document.createElement('div');
+        txt.className = 'notif-text';
+        const t = document.createElement('div'); t.className = 'notif-title'; t.textContent = title || 'Notification';
+        const b = document.createElement('div'); b.className = 'notif-body'; b.textContent = body || '';
+        txt.appendChild(t); txt.appendChild(b);
+
+        n.appendChild(ic);
+        n.appendChild(txt);
+
+        // append so DOM order + column-reverse placement produces
+        // notifications stacked above previous ones (newer on top)
+        area.appendChild(n);
+
+        notifCount++;
+
+        function removeNotification(el) {
+          if (!el) return;
+          el.classList.add('removing');
+          setTimeout(() => { if (el && el.parentElement) el.remove(); }, 240);
+        }
+
+        // if too many notifications, remove the oldest (bottom-most)
+        if (area.children.length > MAX_NOTIFS) {
+          const oldest = area.firstElementChild; // oldest is now firstElementChild due to append
+          if (oldest) removeNotification(oldest);
+        }
+
+        // add a close button (top-right) — the only way to dismiss the notif
+        const closeBtn = document.createElement('div');
+        closeBtn.className = 'notif-close';
+        closeBtn.title = 'Close';
+        closeBtn.innerHTML = '✕';
+        closeBtn.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); ev.preventDefault(); removeNotification(n); });
+        n.appendChild(closeBtn);
+      }
+
+      // sample messages — you can customize these or replace with dynamic content
+      const sampleMsgs = [
+        ['Mise à jour', 'Votre système a installé une mise à jour.'],
+        ['Courriel', 'Vous avez reçu un nouveau message.'],
+        ['Rappel', 'Réunion dans 30 minutes.'],
+        ['Sécurité', 'Un périphérique inattendu a été détecté.'],
+        ['Sauvegarde', 'Sauvegarde terminée avec succès.']
+      ];
+
+      // start the notifications after the desktop loading screen finishes
+      if (window.__desktopLoaded) {
+        startNotifications();
+      } else {
+        document.addEventListener('desktop:loaded', startNotifications, { once: true });
+      }
+    } catch (err) {
+      console.warn('Notifications init failed', err);
+    }
+  })();
 
   // START button behavior: open a fixed black panel anchored to bottom-left (next to taskbar)
   const startBtn = document.querySelector('.start-btn');
@@ -251,23 +466,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const overlay = document.createElement('div');
             overlay.className = 'final-shutdown-overlay';
-            overlay.style.position = 'fixed';
-            overlay.style.inset = '0';
-            overlay.style.display = 'flex';
-            overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center';
-            overlay.style.background = 'rgb(4,87,156)';
+            // initial background is the blue page color (CSS covers core styling)
             overlay.style.zIndex = 999999;
 
             const img = document.createElement('img');
-              // use the shipped asset (note spelling in file name)
-              img.src = 'images/win10_assets/shuttting_down.gif';
+            img.className = 'final-shutdown-gif';
+            // use the shipped asset (note spelling in file name)
+            img.src = 'images/win10_assets/shuttting_down.gif';
             img.alt = 'Shutting down';
-            img.style.maxWidth = '90%';
-            img.style.maxHeight = '90%';
             overlay.appendChild(img);
 
             document.body.appendChild(overlay);
+
+            // Sequence: show GIF for 3s, then black screen for 2s, then show link
+            setTimeout(() => {
+              // switch to black background
+              overlay.classList.add('final-shutdown-black');
+              // remove the gif to reveal the black screen
+              if (img && img.parentElement) img.remove();
+
+              // after 2s of black screen, automatically redirect to ubuntuView.html
+              setTimeout(() => {
+                try {
+                  window.location.href = 'ubuntuView.html';
+                } catch (err) {
+                  // fallback: create a visible link if redirect is blocked
+                  const a = document.createElement('a');
+                  a.href = 'ubuntuView.html';
+                  a.className = 'final-shutdown-link visible';
+                  a.textContent = 'Continuer vers Ubuntu View';
+                  overlay.appendChild(a);
+                }
+              }, 2000);
+            }, 3000);
           } catch (err) {
             console.warn('Failed to show final shutdown overlay', err);
           }
@@ -330,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const win = document.createElement('div');
     win.className = 'window';
     // Force size 300x600 as requested
-    win.style.width = '300px';
+    win.style.width = '1000px';
     win.style.height = '600px';
     // ensure CSS max-width doesn't override our explicit size
     win.style.maxWidth = 'none';
