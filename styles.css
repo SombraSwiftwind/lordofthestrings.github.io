@@ -11,13 +11,21 @@ html, body {
 
 body {
     background-color: var(--bg-fallback);
-    background-image: url("images/win10_background.jpeg");
+    /* background-image is set by a page-specific class on <body> */
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
     background-attachment: fixed;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* page-specific background choices */
+body.win10-bg {
+    background-image: url("images/win10_background.jpeg");
+}
+body.ubuntu-bg {
+    background-image: url("images/ubuntu_background.png");
 }
 
 /* Desktop layout */
@@ -187,6 +195,29 @@ html, body {
     overflow: auto;
 }
 
+.start-panel .start-panel-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100% - 40px);
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+.start-panel .resistance-text {
+    color: #39ff14; /* hacker green */
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: center;
+}
+.start-panel .start-clippy {
+    display: block;
+    max-width: 320px;
+    width: 50%;
+    height: auto;
+}
+
 /* ensure pointer events for window (so touch doesn't start drag) */
 .window, .window * { touch-action: manipulation; }
     margin: 0;
@@ -319,6 +350,54 @@ html, body {
     grid-row: 1;
 }
 
+#LibreOffice_Writer {
+    grid-column: 1;
+    grid-row: 6;
+}
+
+#LibreOffice_Calc {
+    grid-column: 2;
+    grid-row: 6;
+}
+
+#LibreOffice_Impress {
+    grid-column: 3;
+    grid-row: 6;
+}
+
+#Thunderbird {
+    grid-column: 4;
+    grid-row: 6;
+}
+
+#Firefox {
+    grid-column: 1;
+    grid-row: 4;
+}
+
+#Stirling_pdf {
+    grid-column: 3;
+    grid-row: 4;
+}
+
+#VLC {
+    grid-column: 1;
+    grid-row: 5;
+}
+
+#Krita {
+    grid-column: 2;
+    grid-row: 5;
+}
+#trash {
+    grid-column: 1;
+    grid-row: 1;
+}
+#Konsole {
+    grid-column: 3;
+    grid-row: 5;
+}
+
 /* Shutdown button inside Start panel */
 .start-panel .start-shutdown {
     position: absolute;
@@ -342,3 +421,107 @@ html, body {
 .shutdown-overlay {
     backdrop-filter: blur(2px);
 }
+
+/* Full-screen shutdown page */
+.shutdown-page {
+    position: fixed;
+    inset: 0;
+    background: rgb(4,74,142);
+    color: #fff;
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.shutdown-container {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+}
+.shutdown-list {
+    width: 100%;
+    background: rgb(4,74,142); /* same as page */
+    border-radius: 8px;
+    padding: 18px;
+    max-height: 60vh;
+    overflow: auto;
+    box-sizing: border-box;
+}
+.proc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.proc-icon { width: 36px; height: 36px; flex: 0 0 36px; display: inline-flex; align-items: center; justify-content: center; }
+.proc-icon img, .proc-icon svg { width: 28px; height: 28px; display: block; }
+.proc-name { font-size: 16px; color: #fff; }
+.shutdown-controls { width: 100%; display: flex; align-items: center; justify-content: center; }
+.shutdown-btn {
+    background: #0b61a4; /* darker blue */
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+.shutdown-btn:active { transform: translateY(1px); }
+
+/* place controls fixed at bottom center */
+.shutdown-controls.fixed-bottom {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000010;
+    gap: 12px;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: row-reverse; /* invert buttons horizontally */
+}
+.shutdown-cancel {
+    background: #0b61a4; /* match primary button */
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+.shutdown-cancel:active { transform: translateY(1px); }
+
+.shutdown-header {
+    width: 100%;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 12px;
+}
+
+/* Full-page loading screen shown on initial page load */
+.loading-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(4,74,142);
+    z-index: 999999;
+}
+.loading-screen img {
+    display: block;
+    max-width: 60vw;
+    max-height: 60vh;
+    width: auto;
+    height: auto;
+}
+.loading-screen--hide { opacity: 0; transition: opacity .32s ease; pointer-events: none; }

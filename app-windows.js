@@ -2,6 +2,28 @@
 // Builds the 16x32 grid, sizes cells, and handles opening simple app windows on double-click.
 
 document.addEventListener('DOMContentLoaded', () => {
+  // show initial loading screen for 5s centered gif
+  (function showInitialLoading() {
+    try {
+      const ls = document.createElement('div');
+      ls.className = 'loading-screen';
+      const gif = document.createElement('img');
+      gif.src = 'images/win10_assets/just-a-moment-loading.gif';
+      gif.alt = 'Loading';
+      ls.appendChild(gif);
+      document.body.appendChild(ls);
+      // remove after 5 seconds with a small fade
+      setTimeout(() => {
+        ls.classList.add('loading-screen--hide');
+        setTimeout(() => { ls.remove(); }, 360);
+      }, 5000);
+    } catch (err) {
+      console.warn('loading screen failed', err);
+    }
+  })();
+
+  
+
   const grid = document.querySelector('.grid');
   const desktop = document.querySelector('.desktop');
   if (!grid || !desktop) return;
@@ -58,6 +80,19 @@ document.addEventListener('DOMContentLoaded', () => {
       panel.style.background = '#1b1b1bff';
       panel.style.zIndex = ++window.__winZ;
       panel.tabIndex = -1;
+      // add centered resistance message and clippy gif
+      const centerWrap = document.createElement('div');
+      centerWrap.className = 'start-panel-center';
+      const resText = document.createElement('div');
+      resText.className = 'resistance-text';
+      resText.textContent = 'La Résistance commence! Quitte cet OS immédiatement et rejoins Linux!';
+      const clippyImg = document.createElement('img');
+      clippyImg.className = 'start-clippy';
+      clippyImg.src = 'images/win10_assets/clippy.gif';
+      clippyImg.alt = 'clippy';
+      centerWrap.appendChild(resText);
+      centerWrap.appendChild(clippyImg);
+      panel.appendChild(centerWrap);
       // add shutdown button at bottom-left
       const shutdown = document.createElement('button');
       shutdown.className = 'start-shutdown';
@@ -71,30 +106,209 @@ document.addEventListener('DOMContentLoaded', () => {
       shutdown.appendChild(img);
       panel.appendChild(shutdown);
 
-      // shutdown action: confirm then show temporary shutting down overlay
+      // shutdown action: show persistent shutdown page with process list
       shutdown.addEventListener('pointerdown', (sev) => {
         sev.stopPropagation(); sev.preventDefault();
         const ok = confirm('Voulez-vous éteindre ?');
         if (!ok) return;
-        const overlay = document.createElement('div');
-        overlay.className = 'shutdown-overlay';
-        overlay.textContent = 'Shutting down…';
-        overlay.style.position = 'fixed';
-        overlay.style.left = '0';
-        overlay.style.top = '0';
-        overlay.style.width = '100vw';
-        overlay.style.height = '100vh';
-        overlay.style.background = '#000';
-        overlay.style.color = '#fff';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.style.fontSize = '20px';
-        overlay.style.zIndex = ++window.__winZ;
-        document.body.appendChild(overlay);
-        // remove panel and overlay after a short delay
+        // remove the start panel
         if (panel && panel.parentElement) panel.remove();
-        setTimeout(() => overlay.remove(), 1200);
+
+        // build shutdown page
+        const shutdownPage = document.createElement('div');
+        shutdownPage.className = 'shutdown-page';
+        shutdownPage.tabIndex = -1;
+
+        const container = document.createElement('div');
+        container.className = 'shutdown-container';
+
+        const header = document.createElement('div');
+        header.className = 'shutdown-header';
+        header.textContent = 'Closing 0 app and shutting down';
+        container.appendChild(header);
+
+        const list = document.createElement('div');
+        list.className = 'shutdown-list';
+
+        // controls will be fixed at bottom
+        const controls = document.createElement('div');
+        controls.className = 'shutdown-controls fixed-bottom';
+        const btn = document.createElement('button');
+        btn.className = 'shutdown-btn';
+        btn.type = 'button';
+        btn.textContent = 'Shut down anyway';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'shutdown-cancel';
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Cancel';
+        controls.appendChild(cancelBtn);
+        controls.appendChild(btn);
+
+        container.appendChild(list);
+        shutdownPage.appendChild(container);
+        // controls are fixed; append them to the shutdown page so they are in the DOM
+        shutdownPage.appendChild(controls);
+        document.body.appendChild(shutdownPage);
+
+        // pick apps (exclude bin)
+        const apps = Array.from(document.querySelectorAll('.app')).filter(a => a.id !== 'bin');
+        function addProcessFromRandomApp() {
+          if (!apps || apps.length === 0) return;
+          const a = apps[Math.floor(Math.random() * apps.length)];
+          const proc = document.createElement('div');
+          proc.className = 'proc-item';
+          const iconWrap = document.createElement('div');
+          iconWrap.className = 'proc-icon';
+          const iconEl = a.querySelector('img, svg');
+          if (iconEl) {
+            if (iconEl.tagName.toLowerCase() === 'img') {
+              const im = document.createElement('img');
+              im.src = iconEl.src;
+              im.alt = iconEl.alt || '';
+              iconWrap.appendChild(im);
+            } else {
+              const clone = iconEl.cloneNode(true);
+              // ensure svg sizing
+              clone.style.width = '24px'; clone.style.height = '24px';
+              iconWrap.appendChild(clone);
+            }
+          } else {
+            const ph = document.createElement('div');
+            ph.style.width = '28px'; ph.style.height = '28px'; ph.style.background = 'rgba(255,255,255,0.12)'; ph.style.borderRadius = '6px';
+            iconWrap.appendChild(ph);
+          }
+
+          const nameWrap = document.createElement('div');
+          nameWrap.className = 'proc-name';
+          const name = (a.querySelector('.appName') && a.querySelector('.appName').textContent.trim()) || a.id || 'App';
+          nameWrap.textContent = name;
+
+          proc.appendChild(iconWrap);
+          proc.appendChild(nameWrap);
+          list.appendChild(proc);
+          // scroll to bottom so newest is visible
+          list.scrollTop = list.scrollHeight;
+          // update header count
+          if (typeof updateHeader === 'function') updateHeader();
+          // track how many processes have been spawned in total
+          try {
+            spawnedCount = (typeof spawnedCount === 'number') ? spawnedCount + 1 : 1;
+          } catch (err) {
+            spawnedCount = 1;
+          }
+          // if we've reached the maximum allowed spawns, stop the spawner
+          if (spawnedCount >= MAX_SPAWN) {
+            spawnedCount = MAX_SPAWN;
+            maxReached = true;
+            if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+          }
+        }
+
+        function updateHeader() {
+          const n = list.children.length;
+          header.textContent = `Closing ${n} apps and shutting down`;
+          // if we've previously reached the spawn maximum and the user
+          // has reduced the visible list to zero, show the final shutdown
+          // overlay. This ensures the overlay appears whether the last
+          // removal happened via the button or other UI actions.
+          try {
+            if (typeof showFinalShutdown === 'function' && maxReached && n === 0) {
+              showFinalShutdown();
+            }
+          } catch (err) {
+            console.warn('Error checking final shutdown condition', err);
+          }
+        }
+
+        // spawning control variables
+        let spawnInterval = 500; // start at 500ms
+        let spawnTimer = null;
+        let spawnedCount = 0;
+        const MAX_SPAWN = 150;
+        let maxReached = false;
+
+        function startSpawner() {
+          if (spawnTimer) return;
+          // guard: don't start if already at max
+          if (maxReached) return;
+          spawnTimer = setInterval(() => {
+            addProcessFromRandomApp();
+          }, spawnInterval);
+        }
+
+        function restartSpawner() {
+          if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+          if (maxReached) return;
+          spawnTimer = setInterval(() => addProcessFromRandomApp(), spawnInterval);
+        }
+
+        // show the final fullscreen shutdown overlay (when max reached and list emptied)
+        function showFinalShutdown() {
+          try {
+            if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+            // remove the shutdown page to avoid layering issues
+            if (shutdownPage && shutdownPage.parentElement) shutdownPage.remove();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'final-shutdown-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            overlay.style.background = 'rgb(4,87,156)';
+            overlay.style.zIndex = 999999;
+
+            const img = document.createElement('img');
+              // use the shipped asset (note spelling in file name)
+              img.src = 'images/win10_assets/shuttting_down.gif';
+            img.alt = 'Shutting down';
+            img.style.maxWidth = '90%';
+            img.style.maxHeight = '90%';
+            overlay.appendChild(img);
+
+            document.body.appendChild(overlay);
+          } catch (err) {
+            console.warn('Failed to show final shutdown overlay', err);
+          }
+        }
+
+        btn.addEventListener('pointerdown', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          // remove the topmost process if exists
+          if (list.firstElementChild) list.removeChild(list.firstElementChild);
+
+          // update header after removal
+          updateHeader();
+
+          // start spawner on first click
+          if (!spawnTimer && !maxReached) {
+            startSpawner();
+          }
+
+          // decrease interval by 200ms on each click until 150ms
+          const newInterval = Math.max(250, spawnInterval - 50);
+          if (newInterval !== spawnInterval) {
+            spawnInterval = newInterval;
+            restartSpawner();
+          }
+
+          // if spawner previously reached max and now player reduced list to 0, show final shutdown
+          if (maxReached && list.children.length === 0) {
+            showFinalShutdown();
+          }
+        });
+
+        // cancel returns to desktop and clears timers
+        cancelBtn.addEventListener('pointerdown', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          if (spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+          if (shutdownPage && shutdownPage.parentElement) shutdownPage.remove();
+        });
+
+        // add one initial process on open and update header
+        addProcessFromRandomApp();
+        updateHeader();
       });
 
       desktop.appendChild(panel);
