@@ -11,8 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
       window.__winZ = window.__winZ || 20000;
       const w = document.createElement('div');
       w.className = 'window';
-      w.style.width = '520px';
-      w.style.height = '180px';
+      // responsive welcome window size
+      w.style.width = 'min(80vw, 42rem)';
+      w.style.height = 'min(30vh, 14rem)';
       w.style.zIndex = ++window.__winZ;
       w.tabIndex = -1;
       w.innerHTML = `
@@ -45,10 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const termWin = document.createElement('div');
     termWin.className = 'window';
-    termWin.style.width = '700px';
-    termWin.style.height = '420px';
-    termWin.style.maxWidth = 'calc(100vw - 40px)';
-    termWin.style.maxHeight = 'calc(100vh - 100px)';
+    // responsive terminal window size (avoid fixed pixels)
+    termWin.style.width = 'min(80vw, 60rem)';
+    termWin.style.height = 'min(70vh, 48rem)';
+    termWin.style.maxWidth = 'calc(100vw - 4rem)';
+    termWin.style.maxHeight = 'calc(100vh - 6rem)';
 
     window.__winZ = window.__winZ || 20000;
     termWin.style.zIndex = ++window.__winZ;

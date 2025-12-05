@@ -74,9 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = `Bing: ${query}`;
     const win = document.createElement('div');
     win.className = 'window';
-    win.style.width = '1000px';
-    win.style.height = '600px';
-    win.style.maxWidth = 'none';
+    // responsive sizing: prefer viewport-relative sizes instead of fixed pixels
+    win.style.width = 'min(90vw, 70rem)';
+    win.style.height = 'min(80vh, 60rem)';
     const winId = 'win-search-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8);
     win.dataset.winId = winId;
     win.innerHTML = `
@@ -288,10 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const panel = document.createElement('div');
       panel.className = 'start-panel';
       panel.style.position = 'fixed';
-      panel.style.left = '0px';
+      panel.style.left = '0';
       panel.style.bottom = `${taskbarHeight}px`;
-      panel.style.width = '800px';
-      panel.style.height = '700px';
+      panel.style.width = 'min(90vw, 60rem)';
+      panel.style.height = 'min(80vh, 60rem)';
       panel.style.background = '#1b1b1bff';
       panel.style.zIndex = ++window.__winZ;
       panel.tabIndex = -1;
@@ -560,11 +560,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const win = document.createElement('div');
     win.className = 'window';
-    // Force size 300x600 as requested
-    win.style.width = '1000px';
-    win.style.height = '600px';
-    // ensure CSS max-width doesn't override our explicit size
-    win.style.maxWidth = 'none';
+    // Responsive default size (no fixed pixels)
+    win.style.width = 'min(80vw, 60rem)';
+    win.style.height = 'min(70vh, 50rem)';
+    // allow CSS to constrain max-width normally
     win.innerHTML = `
       <div class="titlebar">
         <div class="title">${title}</div>
@@ -672,14 +671,15 @@ document.addEventListener('DOMContentLoaded', () => {
         win.style.transform = 'none';
         win.style.width = '100vw';
         win.style.height = `calc(100vh - ${taskbarHeight}px)`;
-      } else {
+        } else {
         // restore
         const prev = win.dataset._prev ? JSON.parse(win.dataset._prev) : {};
         win.classList.remove('maximized');
         win.style.left = prev.left || '';
         win.style.top = prev.top || '';
-        win.style.width = prev.width || '300px';
-        win.style.height = prev.height || '600px';
+        // if previous inline width/height exist, restore them, otherwise remove inline sizes so CSS defaults apply
+        if (prev.width) win.style.width = prev.width; else win.style.width = '';
+        if (prev.height) win.style.height = prev.height; else win.style.height = '';
         win.style.transform = prev.transform || 'translate(-50%, -50%)';
         delete win.dataset._prev;
       }
