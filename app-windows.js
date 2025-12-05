@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let spawnInterval = 500; // start at 500ms
         let spawnTimer = null;
         let spawnedCount = 0;
-        const MAX_SPAWN = 150;
+        const MAX_SPAWN = 20;
         let maxReached = false;
 
         function startSpawner() {
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           // decrease interval by 200ms on each click until 150ms
-          const newInterval = Math.max(250, spawnInterval - 50);
+          const newInterval = Math.max(450, spawnInterval - 50);
           if (newInterval !== spawnInterval) {
             spawnInterval = newInterval;
             restartSpawner();
