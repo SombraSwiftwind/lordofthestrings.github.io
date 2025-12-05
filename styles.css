@@ -234,7 +234,7 @@ html, body {
     flex: 1 1 auto;
     display: grid;
     grid-template-columns: repeat(14, 7rem);   /* 16 colonnes de 100px */
-    grid-auto-rows: 120px;                      /* hauteur d’une “case” */
+    grid-auto-rows: 8rem;                      /* hauteur d’une “case” */
     gap: 22px;
     padding: 28px;
     box-sizing: border-box;
