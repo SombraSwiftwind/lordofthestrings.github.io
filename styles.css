@@ -228,6 +228,20 @@ html, body {
     margin-bottom: 12px;
     text-align: center;
 }
+
+.start-panel .clippy-text{
+    color: #39ff14; /* hacker green */
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.start-panel .clippy-text a {
+    color: #2ac40f;
+    text-decoration: underline;
+}
+
 .start-panel .start-clippy {
     display: block;
     max-width: 320px;

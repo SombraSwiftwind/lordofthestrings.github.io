@@ -299,14 +299,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const centerWrap = document.createElement('div');
       centerWrap.className = 'start-panel-center';
       const resText = document.createElement('div');
+      const clippyText = document.createElement('div');
       resText.className = 'resistance-text';
       resText.textContent = 'La Résistance commence! Quitte cet OS immédiatement et rejoins Linux!';
+      clippyText.className = 'clippy-text';
+      clippyText.innerHTML = 'Clippy fait référence au <a href="https://fr.wikipedia.org/wiki/Droit_%C3%A0_la_r%C3%A9paration" target="_blank" rel="noopener noreferrer">droit à la réparation</a> et a été popularisé par <a href="https://www.youtube.com/channel/UCl2mFZoRqjw_ELax4Yisf6w" target="_blank" rel="noopener noreferrer">Louis Rossmann</a>.';
       const clippyImg = document.createElement('img');
       clippyImg.className = 'start-clippy';
       clippyImg.src = 'images/win10_assets/clippy.gif';
       clippyImg.alt = 'clippy';
       centerWrap.appendChild(resText);
+    
       centerWrap.appendChild(clippyImg);
+      centerWrap.appendChild(clippyText);
       panel.appendChild(centerWrap);
       // add shutdown button at bottom-left
       const shutdown = document.createElement('button');
@@ -564,6 +569,46 @@ document.addEventListener('DOMContentLoaded', () => {
     win.style.width = 'min(80vw, 60rem)';
     win.style.height = 'min(70vh, 50rem)';
     // allow CSS to constrain max-width normally
+    if (title.toLowerCase() === 'edge') {
+        paragraphe = "Découverez des alternatives à Edge, le navigateur imposé par Microsoft. <br/> Essayez <a href='https://www.mozilla.org/firefox/' target='_blank' rel='noopener noreferrer'>Firefox</a>.";
+        logo = 'images/appIconsUbuntu/Firefox.svg';
+        alternativeName = 'Firefox';
+    }
+    else if (title.toLowerCase() === 'word') {
+        paragraphe = `Découverez des alternatives à Word <br/> Essayez <a href='https://www.libreoffice.org/' target='_blank' rel='noopener noreferrer'>LibreOffice Writer</a>.`;
+        logo = 'images/appIconsUbuntu/LibreOffice_Writer.svg';
+        alternativeName = 'LibreOffice Writer';
+    }
+    else if (title.toLowerCase() === 'excel') {
+        paragraphe = `Découverez des alternatives à Excel <br/> Essayez <a href='https://www.libreoffice.org/' target='_blank' rel='noopener noreferrer'>LibreOffice Calc</a>.`;
+        logo = 'images/appIconsUbuntu/LibreOffice_Calc.svg';
+        alternativeName = 'LibreOffice Calc';
+    }
+    else if (title.toLowerCase() === 'powerpoint') {
+        paragraphe = `Découverez des alternatives à PowerPoint <br/> Essayez <a href='https://www.libreoffice.org/' target='_blank' rel='noopener noreferrer'>LibreOffice Impress</a>.`;
+        logo = 'images/appIconsUbuntu/LibreOffice_Impress.svg';
+        alternativeName = 'LibreOffice Impress';
+    }
+    else if (title.toLowerCase() === 'outlook') {
+        paragraphe = `Découverez des alternatives à Outlook <br/> Essayez <a href='https://www.mozilla.org/thunderbird/' target='_blank' rel='noopener noreferrer'>Mozilla Thunderbird</a>.`;
+        logo = 'images/appIconsUbuntu/Thunderbird.svg';
+        alternativeName = 'Mozilla Thunderbird';
+    }
+    else if (title.toLowerCase() === 'adobe reader') {
+        paragraphe = `Découverez des alternatives à Adobe Reader <br/> Essayez <a href='https://stirlingpdf.com/' target='_blank' rel='noopener noreferrer'>StirlingPDF</a>.`;
+        logo = 'images/appIconsUbuntu/Stirlingpdf.svg';
+        alternativeName = 'LibreOffice Writer';
+    }
+    else if (title.toLowerCase() === 'paint') {
+        paragraphe = `Découverez des alternatives à Paint <br/> Essayez <a href='https://krita.org/' target='_blank' rel='noopener noreferrer'>Krita</a>.`;
+        logo = 'images/appIconsUbuntu/Krita.svg';
+        alternativeName = 'Krita';
+    }
+    else if (title.toLowerCase() === 'media player') {
+        paragraphe = `Découverez des alternatives à Media Player <br/> Essayez <a href='https://vlc.org/' target='_blank' rel='noopener noreferrer'>VLC Media Player</a>.`;
+        logo = 'images/appIconsUbuntu/VLC.svg';
+        alternativeName = 'VLC Media Player';
+    }
     win.innerHTML = `
       <div class="titlebar">
         <div class="title">${title}</div>
@@ -573,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="win-btn close" title="Close">✕</div>
         </div>
       </div>
-      <div class="content"><p>Fenêtre ouverte pour <strong>${title}</strong>. Ceci est un paragraphe d'exemple.</p></div>
+      <div class="content"><p>${paragraphe}</p><img src="${logo}" alt="${alternativeName} logo" style="max-width:100px; margin-top:10px;" /></div>
     `;
 
     // unique id for taskbar mapping
