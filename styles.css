@@ -1,0 +1,344 @@
+/* /home/harry/Documents/lordofthestrings.github.io/style.css */
+
+:root {
+    --bg-fallback: #0b0f12;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background-color: var(--bg-fallback);
+    background-image: url("images/win10_background.jpeg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desktop layout */
+html, body {
+    height: 100%;
+
+/* ghost that follows the pointer during drag */
+.ghost {
+    pointer-events: none;
+    opacity: 0.95;
+    transform-origin: center center;
+    transition: transform 60ms linear;
+    z-index: 99999;
+    filter: drop-shadow(0 12px 20px rgba(0,0,0,0.6));
+}
+
+/* hide original while dragging (keeps layout) */
+.app.drag-hidden {
+    opacity: 0.08;
+}
+
+/* Window (opened by double-click) */
+.window {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(var(--cell-size,48px) * 6);
+    max-width: 90vw;
+    background: rgba(255,255,255,0.98);
+    color: #111;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    overflow: hidden;
+    z-index: 20000;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.window .titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02));
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.window .title {
+    font-weight: 600;
+    font-size: 14px;
+}
+.window .close {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.window .close:hover { background: rgba(0,0,0,0.06); }
+.window .content {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Titlebar controls (minimize, maximize, close) */
+.window .titlebar .controls {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+.window .titlebar .win-btn {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: #222;
+}
+.window .titlebar .win-btn:hover { background: rgba(0,0,0,0.06); }
+
+/* maximized state */
+.window.maximized {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+    width: 100vw !important;
+    height: calc(100vh - 4em) !important; /* leave taskbar space */
+}
+
+/* taskbar items for minimized windows */
+.taskbar {
+    height: 4em;
+    width: 100%;
+    background: rgba(0,0,0,0.95);
+    display: flex;
+    align-items: center;
+    padding: 6px;
+    box-sizing: border-box;
+    gap: 8px;
+}
+.taskbar .tb-item {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+}
+.taskbar .tb-item:hover { background: rgba(255,255,255,0.12); }
+
+/* Taskbar layout: left (logo), center (spacer), right (items) */
+.taskbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4em;
+    width: 100%;
+    background: rgba(31, 31, 31, 0.95);
+    padding: 6px 12px;
+    box-sizing: border-box;
+    gap: 8px;
+}
+.taskbar .tb-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.taskbar .start-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.taskbar .start-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
+}
+.taskbar .start-btn .start-logo {
+    width: 28px;
+    height: 28px;
+    display: block;
+}
+.taskbar .start-btn .logo-color { display: none; }
+.taskbar .start-btn:hover .logo-light { display: none; }
+.taskbar .start-btn:hover .logo-color { display: block; }
+.taskbar .tb-center {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+.taskbar .tb-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Start panel (opened by Start button) */
+.start-panel {
+    border: 1px solid rgba(255,255,255,0.04);
+    overflow: auto;
+}
+
+/* ensure pointer events for window (so touch doesn't start drag) */
+.window, .window * { touch-action: manipulation; }
+    margin: 0;
+    overflow: hidden; /* ensure grid + taskbar fit without scroll */
+}
+
+.desktop {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.grid {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(14, 7rem);   /* 16 colonnes de 100px */
+    grid-auto-rows: 120px;                      /* hauteur d’une “case” */
+    gap: 22px;
+    padding: 28px;
+    box-sizing: border-box;
+    align-items: start;
+    justify-content: start;
+    overflow: hidden;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+    color: #ffffff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+}
+
+.app svg {
+    width: 64px;
+    height: 64px;
+    display: block;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.appName {
+    margin-top: 8px;
+    font-size: 17px;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+
+.app:focus,
+.app:active,
+.app:hover {
+    background-color: rgba(36, 59, 78, 0.8);
+    border-radius: 5px;
+}
+
+.taskbar {
+    height: 4em;
+    width: 100%;
+    background: rgba(0,0,0,0.95);
+}
+
+/* Drag state styles */
+.app {
+    user-select: none;
+    -webkit-user-drag: none;
+}
+.app,
+.cell {
+    touch-action: none; /* allow pointer events to handle touch gestures */
+}
+
+.app.dragging {
+    opacity: 0.6;
+    transform: scale(1.04);
+    z-index: 9999;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+}
+
+#word {
+    grid-column: 1;
+    grid-row: 6;
+}
+
+#excel {
+    grid-column: 2;
+    grid-row: 6;
+}
+
+#powerpoint {
+    grid-column: 3;
+    grid-row: 6;
+}
+
+#outlook {
+    grid-column: 4;
+    grid-row: 6;
+}
+
+#edge {
+    grid-column: 1;
+    grid-row: 4;
+}
+
+#adobe_acrobat {
+    grid-column: 3;
+    grid-row: 4;
+}
+
+#media_player {
+    grid-column: 1;
+    grid-row: 5;
+}
+
+#paint {
+    grid-column: 2;
+    grid-row: 5;
+}
+#bin {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+/* Shutdown button inside Start panel */
+.start-panel .start-shutdown {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 60px;
+    border: none;
+    background: rgba(255,255,255,0.04);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .12s ease, transform .08s ease;
+}
+.start-panel .start-shutdown img { display: block; width: 23px; height: 23px; }
+.start-panel .start-shutdown:active { transform: scale(.96); }
+.start-panel .start-shutdown:hover { background: rgba(255,255,255,0.08); }
+
+/* temporary full-screen overlay shown when shutting down */
+.shutdown-overlay {
+    backdrop-filter: blur(2px);
+}
